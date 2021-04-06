@@ -1,9 +1,15 @@
 import mongoose from "mongoose";
 import express, { Request, Response } from "express";
-import { requireAuth, validateRequest } from "@oldledger/common";
+import {
+  requireAuth,
+  validateRequest,
+  OrderStatus,
+  BadRequestError,
+  NotFoundError,
+} from "@oldledger/common";
 import { body } from "express-validator";
 import { Ticket } from "../models/ticket";
-import { NotFoundError } from "@oldledger/common";
+import { Order } from "../models/order";
 
 const router = express.Router();
 
@@ -14,8 +20,8 @@ router.post(
     body("ticketId")
       .not()
       .isEmpty()
-      // Validate id is mongo id. This introduces tight coupling with the tickets service
-      // by making assumptions about the db used to generate the ticketId
+      // Validate id is mongo id type. This introduces tight coupling with the tickets
+      // service by making assumptions about the db used to generate the ticketId
       .custom((input: string) => mongoose.Types.ObjectId.isValid(input))
       .withMessage("TicketId must be provided"),
   ],
@@ -30,6 +36,22 @@ router.post(
     }
 
     // Make sure that this ticket is not already reserved
+    // Run query to look at all orders.  Find an order where the ticket
+    // is the ticket we just found *and* the orders status is *not* cancelled.
+    // If we find an order from that means the ticket *is* reserved
+    const existingOrder = await Order.findOne({
+      ticket: ticket,
+      status: {
+        $in: [
+          OrderStatus.Created,
+          OrderStatus.AwaitingPayment,
+          OrderStatus.Complete,
+        ],
+      },
+    });
+    if (existingOrder) {
+      throw new BadRequestError("Ticket is already reserved");
+    }
 
     // Calculate an expiration date for this order
 
