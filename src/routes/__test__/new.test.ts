@@ -61,4 +61,24 @@ it("returns an error if the ticket is already reserved", async () => {
     .expect(400);
 });
 
-it("reserves a ticket", async () => {});
+it("reserves a ticket", async () => {
+  const ticket = Ticket.build({
+    title: "concert",
+    price: 20,
+  });
+
+  await ticket.save();
+
+  let orders = await Order.find({});
+
+  expect(orders).toHaveLength(0);
+
+  await request(app)
+    .post("/api/orders")
+    .set("Cookie", global.signin())
+    .send({ ticketId: ticket.id })
+    .expect(201);
+
+  orders = await Order.find({});
+  expect(orders).toHaveLength(1);
+});
