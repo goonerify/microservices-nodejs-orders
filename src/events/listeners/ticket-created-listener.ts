@@ -9,5 +9,18 @@ export class TicketCreatedListener extends Listener<TicketCreatedEvent> {
 
   // msg contains the ack method that we use to acknowledge an
   // event after it has been successfully processed
-  onMessage(data: TicketCreatedEvent["data"], msg: Message) {}
+  async onMessage(data: TicketCreatedEvent["data"], msg: Message) {
+    const { title, price } = data;
+
+    // We use this ticket created listener to implement data replication
+    // in our local database for Tickets, so we don't have to reach across
+    // to the main ticket service for information about tickets
+    const ticket = Ticket.build({
+      title,
+      price,
+    });
+    await ticket.save();
+
+    msg.ack();
+  }
 }
