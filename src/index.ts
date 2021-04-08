@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 
 import { app } from "./app";
+import { TicketCreatedListener } from "./events/listeners/ticket-created-listener";
+import { TicketUpdatedListener } from "./events/listeners/ticket-updated-listener";
 import { natsWrapper } from "./nats-wrapper";
 
 const start = async () => {
@@ -30,6 +32,9 @@ const start = async () => {
       process.env.NATS_CLIENT_ID, // Client ID needs to be unique for every instance of the ticketing service
       process.env.NATS_URL
     );
+
+    new TicketCreatedListener(natsWrapper.client).listen();
+    new TicketUpdatedListener(natsWrapper.client).listen();
 
     natsWrapper.client.on("close", () => {
       console.log("NATS connection closed!");
