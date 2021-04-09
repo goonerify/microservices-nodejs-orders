@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { updateIfCurrentPlugin } from "mongoose-update-if-current";
 import { OrderStatus } from "@oldledger/common";
 import { Order } from "./order";
 
@@ -14,6 +15,7 @@ interface TicketAttrs {
 export interface TicketDoc extends mongoose.Document {
   title: string;
   price: number;
+  version: number;
   isReserved(): Promise<boolean>;
 }
 
@@ -24,7 +26,7 @@ interface TicketModel extends mongoose.Model<TicketDoc> {
 }
 
 // An interface that defines the structure of a document, default values, validators, etc.
-const ticketSchema = new mongoose.Schema<TicketDoc>(
+const ticketSchema = new mongoose.Schema(
   {
     title: {
       type: String,
@@ -48,6 +50,10 @@ const ticketSchema = new mongoose.Schema<TicketDoc>(
   }
 );
 
+// use a version field as version key instead of the default __v field
+ticketSchema.set("versionKey", "version");
+ticketSchema.plugin(updateIfCurrentPlugin);
+
 // The statics object allows us to add a new method to the model
 ticketSchema.statics.build = (attrs: TicketAttrs) => {
   return new Ticket({
@@ -68,7 +74,7 @@ ticketSchema.methods.isReserved = async function () {
   // If we find an order from that means the ticket *is* reserved, otherwise
   // the value will be null. Return the boolean representation of the query result
   const existingOrder = await Order.findOne({
-    ticket: this,
+    ticket: this as TicketDoc,
     status: {
       $in: [
         OrderStatus.Created,
