@@ -13,7 +13,7 @@ export class TicketUpdatedListener extends Listener<TicketUpdatedEvent> {
     if (!ticket) {
       // Note that this throws an error not just because a ticket with id was
       // not found, but also when a ticket with appropriate version was not found
-      console.log("TICKET NOT FOUND");
+      console.log(`Ticket with id '${data.id}' not found`);
       // throw new Error("Ticket not found");
       return;
     }
