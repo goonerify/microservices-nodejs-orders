@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { updateIfCurrentPlugin } from "mongoose-update-if-current";
 import { OrderStatus } from "@oldledger/common";
 import { TicketDoc } from "./ticket";
 
@@ -51,6 +52,9 @@ const orderSchema = new mongoose.Schema(
     },
   }
 );
+
+orderSchema.set("versionKey", "version");
+orderSchema.plugin(updateIfCurrentPlugin);
 
 // This custom build function allows type checking on attrs.
 // It will be available on the model if defined on the schema's statics object
