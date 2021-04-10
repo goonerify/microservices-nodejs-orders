@@ -18,8 +18,10 @@ export class TicketUpdatedListener extends Listener<TicketUpdatedEvent> {
       return;
     }
 
-    const { title, price } = data;
-    ticket.set({ title, price });
+    const { title, price, version } = data;
+    // Update the version manually to allow the use of non-continuous
+    // increments to the version numbers or arbitrary timestamp formats
+    ticket.set({ title, price, version });
     // Note that the update-if-current plugin will update the version
     // when this record is saved to the database
     await ticket.save();
