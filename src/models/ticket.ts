@@ -56,7 +56,21 @@ const ticketSchema = new mongoose.Schema(
 
 // use a version field as version key instead of the default __v field
 ticketSchema.set("versionKey", "version");
-ticketSchema.plugin(updateIfCurrentPlugin);
+// ticketSchema.plugin(updateIfCurrentPlugin);
+ticketSchema.pre("save", function (done) {
+  // this $where property tells mongo to also find a document with the
+  // version indicated below along with other relevant search criteria mongo
+  // uses like the appropriate id when doing a save (update) operation
+  // Note that it seems weird that mongo does a search when we save a record
+  // to the database since saving is done by using a method of a record (row)
+  // that already exists in the database
+  this.$where = {
+    // update - 1 to - 100 or to a timestamp or to whatever type of versioning schema you use
+    version: this.get("version") - 1,
+  };
+
+  done();
+});
 
 ticketSchema.statics.findByEvent = (event: { id: string; version: number }) => {
   return Ticket.findOne({
