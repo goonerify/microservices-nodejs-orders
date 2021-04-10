@@ -5,7 +5,7 @@ import { Order } from "./order";
 
 // Properties used to create a ticket
 interface TicketAttrs {
-  id: string;
+  id: string; // Assign consistent ID from ticket service document
   title: string;
   price: number;
 }
@@ -23,6 +23,10 @@ export interface TicketDoc extends mongoose.Document {
 // creating, querying, updating, deleting records, etc
 interface TicketModel extends mongoose.Model<TicketDoc> {
   build(attrs: TicketAttrs): TicketDoc;
+  findByEvent(event: {
+    id: string;
+    version: number;
+  }): Promise<TicketDoc | null>;
 }
 
 // An interface that defines the structure of a document, default values, validators, etc.
@@ -54,7 +58,16 @@ const ticketSchema = new mongoose.Schema(
 ticketSchema.set("versionKey", "version");
 ticketSchema.plugin(updateIfCurrentPlugin);
 
-// The statics object allows us to add a new method to the model
+ticketSchema.statics.findByEvent = (event: { id: string; version: number }) => {
+  return Ticket.findOne({
+    _id: event.id,
+    version: event.version - 1,
+  });
+};
+
+// The statics object allows us to add new methods to the model
+// while the methods object allows us to add new methods to Documents
+// retrieved from the database
 ticketSchema.statics.build = (attrs: TicketAttrs) => {
   return new Ticket({
     _id: attrs.id,
