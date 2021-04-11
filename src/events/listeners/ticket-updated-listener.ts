@@ -16,9 +16,8 @@ export class TicketUpdatedListener extends Listener<TicketUpdatedEvent> {
 
       // Note: Throwing an error here causes the NATS streaming server
       // to stop/break. We console.log and return early instead
-      console.log(`Ticket with id '${data.id}' not found`);
       // throw new Error("Ticket not found");
-      return;
+      return console.log(`Ticket with id '${data.id}' not found`);
     }
 
     const { title, price } = data;
