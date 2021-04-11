@@ -11,8 +11,11 @@ export class TicketUpdatedListener extends Listener<TicketUpdatedEvent> {
     const ticket = await Ticket.findByEvent(data);
 
     if (!ticket) {
-      // Note that this throws an error not just because a ticket with id was
-      // not found, but also when a ticket with appropriate version was not found
+      // Throws an error if a ticket with id was not found,
+      // or a ticket with the appropriate version was not found
+
+      // Note: Throwing an error here causes the NATS streaming server
+      // to stop/break. We console.log and return early instead
       console.log(`Ticket with id '${data.id}' not found`);
       // throw new Error("Ticket not found");
       return;
